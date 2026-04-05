@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Wasm Challenge - Difficulty 24</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #fafafa; }
+        #box { background: white; padding: 30px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 450px; }
+        #status { font-weight: bold; color: #dc3545; margin: 20px 0; }
+        #details { font-family: monospace; font-size: 11px; background: #f0f0f0; padding: 10px; border-radius: 5px; text-align: left; line-height: 1.5; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 6px; }
+        button:disabled { background: #ccc; }
+    </style>
+</head>
+<body>
+    <div id="box">
+        <h2>Antibot Verification</h2>
+        <p style="font-size: 0.9em; color: #666;">Level: High (Difficulty 24)</p>
+        <div id="status">Ready</div>
+        <button id="start">Verify Now</button>
+        <div id="details">
+            Challenge: (Waiting for start...)<br>
+            Nonce: (Waiting for start...)
+        </div>
+    </div>
+
+    <script>
+        const btn = document.getElementById('start');
+        btn.onclick = () => {
+            btn.disabled = true;
+            document.getElementById('status').innerText = "Computing (Difficulty 24)...";
+            document.getElementById('status').style.color = "#dc3545";
+            
+            const salt = Math.random().toString(36).substring(2, 10);
+            const challengeStr = "C-" + Date.now() + "-" + salt;
+            const difficulty = 24; // High difficulty
+
+            document.getElementById('details').innerHTML = `Challenge: ${challengeStr}<br>Nonce: Solving...`;
+
+            const worker = new Worker('worker.js?v=' + Date.now());
+
+            worker.onmessage = (e) => {
+                if (e.data.type === 'result') {
+                    document.getElementById('status').innerText = `Verified in ${e.data.time}ms!`;
+                    document.getElementById('status').style.color = "green";
+                    document.getElementById('details').innerHTML = `Challenge: ${challengeStr}<br>Nonce: ${e.data.nonce}`;
+                    btn.disabled = false;
+                    worker.terminate();
+                } else if (e.data.type === 'error') {
+                    document.getElementById('status').innerText = "Error: " + e.data.message;
+                    btn.disabled = false;
+                    worker.terminate();
+                }
+            };
+            worker.postMessage({ challengeStr, difficulty });
+        };
+    </script>
+</body>
+</html>
